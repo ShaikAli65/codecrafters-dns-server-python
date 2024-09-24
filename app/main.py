@@ -111,6 +111,8 @@ def main():
         print("packet", packet)
         resolved_packet = resolve_packet(packet)
         # response = responce(resolved_packet)
+        resolved_packet.QR = 1
+        print("replying with", resolved_packet)
         udp_socket.sendto(bytes(resolved_packet), source)
 
 

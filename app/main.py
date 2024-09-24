@@ -10,7 +10,7 @@ def resolve_packet(req_data: bytes):
 
 
 def responce(req_packet):
-    ...
+    return b''
 
 
 def main():
@@ -24,10 +24,10 @@ def main():
         try:
             packet, source = udp_socket.recvfrom(MAX_DATAGRAM_SIZE)
             print("request from", source)
+            print("packet", packet)
             resolved_packet = resolve_packet(packet)
             response = responce(resolved_packet)
             udp_socket.sendto(response, source)
-
         except Exception as e:
             print(f"Error receiving data: {e}")
             break

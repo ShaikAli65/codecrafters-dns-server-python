@@ -30,7 +30,6 @@ class DnsHeader:
             "!6H",
             self.ID,
             flags,
-            self.RCODE,
             self.QDCOUNT,
             self.ANCOUNT,
             self.NSCOUNT,
@@ -107,16 +106,12 @@ def main():
     udp_socket.bind(("127.0.0.1", 2053))
 
     while True:
-        try:
-            packet, source = udp_socket.recvfrom(MAX_DATAGRAM_SIZE)
-            print("request from", source)
-            print("packet", packet)
-            resolved_packet = resolve_packet(packet)
-            # response = responce(resolved_packet)
-            udp_socket.sendto(bytes(resolved_packet), source)
-        except Exception as e:
-            print(f"Error receiving data: {e}")
-            break
+        packet, source = udp_socket.recvfrom(MAX_DATAGRAM_SIZE)
+        print("request from", source)
+        print("packet", packet)
+        resolved_packet = resolve_packet(packet)
+        # response = responce(resolved_packet)
+        udp_socket.sendto(bytes(resolved_packet), source)
 
 
 if __name__ == "__main__":

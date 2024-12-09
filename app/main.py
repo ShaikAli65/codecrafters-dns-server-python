@@ -154,6 +154,6 @@ def main():
 
 
 if __name__ == "__main__":
-    # main()
+    main()
     w = b'\x04\xd2\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x0ccodecrafters\x02io\x03com\x00\x00\x01\x00\x01'
     resolve_domain(w)

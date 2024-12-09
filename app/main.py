@@ -197,7 +197,8 @@ def resolve_domain(packet: bytes):
 def resolve_questions(header: DnsHeader, packet):
     header.QDCOUNT
     *parts, everthing_else = resolve_domain(packet)
-    return Question(*parts, *struct.unpack('!HH',everthing_else))
+    print(*parts, everthing_else)
+    # return Question(*parts, *struct.unpack('!HH',everthing_else))
 
 def responce(header: DnsHeader, question: Question):
     resp = DNSRR(question.raw_name, question.QNAME, question.QTYPE, question.QCLASS, 0, 0, b'')
@@ -205,7 +206,7 @@ def responce(header: DnsHeader, question: Question):
     header.QR = True
     header.ANCOUNT = 1
     header.RCODE = RCODE.NOT_IMPL
-    print(header,'\n', question,'\n', resp)
+    # print(header,'\n', question,'\n', resp)
     return bytes(header) + bytes(question) + bytes(resp)
 
 def main():
@@ -220,7 +221,7 @@ def main():
         resolved_header = resolve_header(packet)
         question = resolve_questions(resolved_header, packet)
         print("received", packet)
-        print("resolved header", resolved_header)
+        # print("resolved header", resolved_header)
         print(resp := responce(resolved_header, question))
         udp_socket.sendto(resp, source)
 

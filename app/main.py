@@ -146,7 +146,7 @@ def resolve_question(packet):
     return Question(*parts,*struct.unpack('!HH',everthing_else))
 
 def responce(header: DnsHeader, question: Question):
-    header.QR = 1
+    header.QR = True
     header.QDCOUNT += 1
     return bytes(header) + bytes(question)
 
@@ -166,7 +166,8 @@ def main():
         print("received", packet)
         print("resolved header", resolved_header)
         print("received extra", packet[12:])
-        udp_socket.sendto(responce(resolved_header, question), source)
+        print(resp := responce(resolved_header, question))
+        udp_socket.sendto(resp, source)
 
 
 if __name__ == "__main__":

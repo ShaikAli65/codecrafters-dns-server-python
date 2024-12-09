@@ -139,10 +139,10 @@ def resolve_domain(packet: bytes):
     e  = packet[12: ].find(b'\x00')
     domain = packet[12: ][: e]
     i = 1
-    parts = []
+    parts: list[str] = []
     while True:
         l = int.from_bytes(domain[i - 1: i])
-        parts.append(domain[i: i + l])
+        parts.append(str(domain[i: i + l]))
         i += l + 1
         if i >= len(domain):
             break 
@@ -150,12 +150,13 @@ def resolve_domain(packet: bytes):
 
 def resolve_question(packet):
     *parts, everthing_else = resolve_domain(packet)
-    return Question(*parts,*struct.unpack('!HH',everthing_else))
+    return Question(*parts, *struct.unpack('!HH',everthing_else))
 
 def responce(header: DnsHeader, question: Question):
     header.QR = True
     header.QDCOUNT = 1
     resp = DNSRR(question.raw_name,question.QNAME,question.QTYPE,question.QCLASS,0,0, b'')
+    header.ANCOUNT = 1
     print(header,'\n', question,'\n', resp)
     return bytes(header) + bytes(question) + bytes(resp)
 

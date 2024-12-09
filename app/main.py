@@ -56,28 +56,38 @@ class DnsHeader:
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class DNSRR:
     """
     DNS Resource Record
 
     --- Resource Record ---
     @ https://en.wikipedia.org/wiki/Domain_Name_System
-    NAME	    Name of the node to which this record pertains	Variable
-    TYPE	    Type of RR in numeric form (e.g., 15 for MX RRs)	                                        2
-    CLASS	    Class code	                                                                                2
-    TTL	        Count of seconds that the RR stays valid (The maximum is 2^31 - 1, which is about 68 years)	4
-    RDLENGTH	Length of RDATA field (specified in octets)	                                                2
-    RDATA   	Additional RR-specific data	Variable, as per                                                RDLENGTH
+    
+    VAR           NAME	    Name of the node to which this record pertains	Variable
+    2           TYPE	    Type of RR in numeric form (e.g., 15 for MX RRs)	                                        
+    2           CLASS	    Class code	                                                                                
+    4           TTL	        Count of seconds that the RR stays valid (The maximum is 2^31 - 1, which is about 68 years)	
+    2           RDLENGTH	Length of RDATA field (specified in octets)	                                                
+    RDLENGTH    RDATA   	Additional RR-specific data	Variable, as per                                                
     """
-    NAME: bytes
+    NAME: list
     TYPE: int
     CLASS: int 
     TTL: int
     RDLENGTH: int
     RDATA: int
 
+@dataclass(slots=True)
+class Question:
+    raw_name: bytes
+    QNAME:list[str]
+    QTYPE:int
+    QCLASS:int
 
+    def __bytes__(self):
+        return self.raw_name + b'\x00' + self.QTYPE.to_bytes(2, 'big') + self.QCLASS.to_bytes(2, 'big')
+            
 def resolve_header(req_data: bytes):
     """
 
@@ -118,11 +128,9 @@ def resolve_header(req_data: bytes):
     arcount = unpacket_tuple[5]
     return DnsHeader(pid, qr, op_code, aa, tc, rd, ra, z, rcode, qdcount, ancount, nscount, arcount)
 
-def responce(req_packet):
-    return b''
-
 def resolve_domain(packet: bytes):
-    domain = packet[12: ][: packet[12:].find(b'\x00')]
+    e  = packet[12: ].find(b'\x00')
+    domain = packet[12: ][: e]
     i = 1
     parts = []
     while True:
@@ -130,8 +138,17 @@ def resolve_domain(packet: bytes):
         parts.append(domain[i: i + l])
         i += l + 1
         if i >= len(domain):
-            break
-    return parts
+            break 
+    return domain, parts, packet[12: ][e + 1: ]
+
+def resolve_question(packet):
+    *parts, everthing_else = resolve_domain(packet)
+    return Question(*parts,*struct.unpack('!HH',everthing_else))
+
+def responce(header: DnsHeader, question: Question):
+    header.QR = 1
+    header.QDCOUNT += 1
+    return bytes(header) + bytes(question)
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -143,17 +160,16 @@ def main():
     while True:
         packet, source = udp_socket.recvfrom(MAX_DATAGRAM_SIZE)
         print("request from", source)
-        resolved_packet = resolve_header(packet)
-        resolved_body = resolve_domain(packet)
-        # response = responce(resolved_packet)
+        resolved_header = resolve_header(packet)
+        question = resolve_question(packet)
+        response = responce(resolved_header, question)
         print("received", packet)
-        print("resolved header", resolved_packet)
+        print("resolved header", resolved_header)
         print("received extra", packet[12:])
-        
-        udp_socket.sendto(bytes(resolved_packet), source)
+        udp_socket.sendto(responce(resolved_header, question), source)
 
 
 if __name__ == "__main__":
-    main()
-    w = b'\x04\xd2\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x0ccodecrafters\x02io\x03com\x00\x00\x01\x00\x01'
-    resolve_domain(w)
+    # main()
+    w = b'\x04\xd2\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x0ccodecrafters\x02io\x00\x00\x01\x00\x01'
+    print(bytes(resolve_question(w)))

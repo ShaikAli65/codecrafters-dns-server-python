@@ -217,9 +217,9 @@ def main():
 
     while True:
         packet, source = udp_socket.recvfrom(MAX_DATAGRAM_SIZE)
+        print("received", packet)
         resolved_header, remaining = resolve_header(packet)
         question = resolve_questions(resolved_header, remaining)
-        print("received", packet)
         print("resolved header", resolved_header)
         resp = responce(resolved_header, question)
         udp_socket.sendto(resp, source)

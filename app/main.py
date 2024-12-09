@@ -121,6 +121,17 @@ def resolve_header(req_data: bytes):
 def responce(req_packet):
     return b''
 
+def resolve_domain(packet: bytes):
+    domain = packet[12: ][: packet[12:].find(b'\x00')]
+    i = 1
+    parts = []
+    while True:
+        l = int.from_bytes(domain[i - 1: i])
+        parts.append(domain[i: i + l])
+        i += l + 1
+        if i >= len(domain):
+            break
+    return parts
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -133,6 +144,7 @@ def main():
         packet, source = udp_socket.recvfrom(MAX_DATAGRAM_SIZE)
         print("request from", source)
         resolved_packet = resolve_header(packet)
+        resolved_body = resolve_domain(packet)
         # response = responce(resolved_packet)
         print("received", packet)
         print("resolved header", resolved_packet)
@@ -142,4 +154,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    w = b'\x04\xd2\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x0ccodecrafters\x02io\x03com\x00\x00\x01\x00\x01'
+    resolve_domain(w)

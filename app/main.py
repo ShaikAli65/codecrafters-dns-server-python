@@ -2,6 +2,7 @@ import socket
 from dataclasses import dataclass
 import struct
 
+
 MAX_DATAGRAM_SIZE = 512 * 1024
 
 @dataclass(slots=True)
@@ -57,7 +58,18 @@ class DnsHeader:
 
 @dataclass
 class DNSRR:
-    """DNS Resource Record"""
+    """
+    DNS Resource Record
+
+    --- Resource Record ---
+    @ https://en.wikipedia.org/wiki/Domain_Name_System
+    NAME	    Name of the node to which this record pertains	Variable
+    TYPE	    Type of RR in numeric form (e.g., 15 for MX RRs)	                                        2
+    CLASS	    Class code	                                                                                2
+    TTL	        Count of seconds that the RR stays valid (The maximum is 2^31 - 1, which is about 68 years)	4
+    RDLENGTH	Length of RDATA field (specified in octets)	                                                2
+    RDATA   	Additional RR-specific data	Variable, as per                                                RDLENGTH
+    """
     NAME: bytes
     TYPE: int
     CLASS: int 
@@ -66,7 +78,7 @@ class DNSRR:
     RDATA: int
 
 
-def resolve_packet(req_data: bytes):
+def resolve_header(req_data: bytes):
     """
 
     Packet Identifier (ID)	            16 bits     A random ID assigned to query packets.
@@ -88,14 +100,6 @@ def resolve_packet(req_data: bytes):
 
     total length 12 bytes
 
-    --- Resource Record ---
-    @https://en.wikipedia.org/wiki/Domain_Name_System
-    NAME	    Name of the node to which this record pertains	Variable
-    TYPE	    Type of RR in numeric form (e.g., 15 for MX RRs)	                                        2
-    CLASS	    Class code	                                                                                2
-    TTL	        Count of seconds that the RR stays valid (The maximum is 2^31 - 1, which is about 68 years)	4
-    RDLENGTH	Length of RDATA field (specified in octets)	                                                2
-    RDATA   	Additional RR-specific data	Variable, as per                                                RDLENGTH
     """
     unpacket_tuple = struct.unpack("!6H", req_data[: 12])
     pid = unpacket_tuple[0]
@@ -128,9 +132,12 @@ def main():
     while True:
         packet, source = udp_socket.recvfrom(MAX_DATAGRAM_SIZE)
         print("request from", source)
-        resolved_packet = resolve_packet(packet)
+        resolved_packet = resolve_header(packet)
         # response = responce(resolved_packet)
-        print("replying with", resolved_packet)
+        print("received", packet)
+        print("resolved header", resolved_packet)
+        print("received extra", packet[12:])
+        
         udp_socket.sendto(bytes(resolved_packet), source)
 
 

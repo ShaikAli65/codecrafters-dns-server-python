@@ -154,7 +154,7 @@ def resolve_question(packet):
 
 def responce(header: DnsHeader, question: Question):
     header.QR = True
-    header.QDCOUNT += 1
+    header.QDCOUNT = 1
     resp = DNSRR(question.raw_name,question.QNAME,question.QTYPE,question.QCLASS,0,0, b'')
     print(header,'\n', question,'\n', resp)
     return bytes(header) + bytes(question) + bytes(resp)

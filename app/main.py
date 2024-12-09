@@ -179,11 +179,11 @@ def resolve_header(req_data: bytes):
     ancount = unpacket_tuple[3] 
     nscount = unpacket_tuple[4]
     arcount = unpacket_tuple[5]
-    return DnsHeader(pid, qr, op_code, aa, tc, rd, ra, z, rcode, qdcount, ancount, nscount, arcount)
+    return DnsHeader(pid, qr, op_code, aa, tc, rd, ra, z, rcode, qdcount, ancount, nscount, arcount), req_data[12: ]
 
 def resolve_domain(packet: bytes):
-    e  = packet[12: ].find(b'\x00')
-    domain = packet[12: ][: e]
+    e  = packet.find(b'\x00')
+    domain = packet[: e]
     i = 1
     parts: list[str] = []
     while True:
@@ -192,7 +192,7 @@ def resolve_domain(packet: bytes):
         i += l + 1
         if i >= len(domain):
             break 
-    return domain, parts, packet[12: ][e + 1: ]
+    return domain, parts, packet[e + 1: ]
 
 def resolve_questions(header: DnsHeader, packet):
     header.QDCOUNT
@@ -217,11 +217,11 @@ def main():
 
     while True:
         packet, source = udp_socket.recvfrom(MAX_DATAGRAM_SIZE)
-        resolved_header = resolve_header(packet)
-        question = resolve_questions(resolved_header, packet)
+        resolved_header, remaining = resolve_header(packet)
+        question = resolve_questions(resolved_header, remaining)
         print("received", packet)
-        # print("resolved header", resolved_header)
-        print(resp := responce(resolved_header, question))
+        print("resolved header", resolved_header)
+        resp = responce(resolved_header, question)
         udp_socket.sendto(resp, source)
 
 

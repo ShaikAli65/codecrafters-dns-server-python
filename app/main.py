@@ -198,11 +198,10 @@ def resolve_questions(header: DnsHeader, packet):
     header.QDCOUNT
     *parts, everthing_else = resolve_domain(packet)
     print(*parts, everthing_else)
-    # return Question(*parts, *struct.unpack('!HH',everthing_else))
+    return Question(*parts, *struct.unpack('!HH',everthing_else))
 
 def responce(header: DnsHeader, question: Question):
     resp = DNSRR(question.raw_name, question.QNAME, question.QTYPE, question.QCLASS, 0, 0, b'')
-    
     header.QR = True
     header.ANCOUNT = 1
     header.RCODE = RCODE.NOT_IMPL

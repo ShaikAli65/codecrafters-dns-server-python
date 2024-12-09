@@ -71,12 +71,19 @@ class DNSRR:
     2           RDLENGTH	Length of RDATA field (specified in octets)	                                                
     RDLENGTH    RDATA   	Additional RR-specific data	Variable, as per                                                
     """
+    raw_name: bytes
     NAME: list
     TYPE: int
     CLASS: int 
     TTL: int
     RDLENGTH: int
-    RDATA: int
+    RDATA: bytes
+
+    def __bytes__(self):
+        start = self.raw_name + b'\x00'
+        mid = struct.pack('!HHIH', self.TYPE, self.CLASS, self.TTL, self.RDLENGTH)
+        end = self.RDATA
+        return start + mid + end
 
 @dataclass(slots=True)
 class Question:
@@ -148,7 +155,9 @@ def resolve_question(packet):
 def responce(header: DnsHeader, question: Question):
     header.QR = True
     header.QDCOUNT += 1
-    return bytes(header) + bytes(question)
+    resp = DNSRR(question.raw_name,question.QNAME,question.QTYPE,question.QCLASS,0,0, b'')
+    print(header,'\n', question,'\n', resp)
+    return bytes(header) + bytes(question) + bytes(resp)
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -159,13 +168,10 @@ def main():
 
     while True:
         packet, source = udp_socket.recvfrom(MAX_DATAGRAM_SIZE)
-        print("request from", source)
         resolved_header = resolve_header(packet)
         question = resolve_question(packet)
-        response = responce(resolved_header, question)
         print("received", packet)
         print("resolved header", resolved_header)
-        print("received extra", packet[12:])
         print(resp := responce(resolved_header, question))
         udp_socket.sendto(resp, source)
 

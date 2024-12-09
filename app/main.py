@@ -219,13 +219,17 @@ def main():
         packet, source = udp_socket.recvfrom(MAX_DATAGRAM_SIZE)
         print("received", packet)
         resolved_header, remaining = resolve_header(packet)
-        question = resolve_questions(resolved_header, remaining)
         print("resolved header", resolved_header)
+        question = resolve_questions(resolved_header, remaining)
         resp = responce(resolved_header, question)
         udp_socket.sendto(resp, source)
 
 
 if __name__ == "__main__":
-    main()
-    # w = b'\x04\xd2\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x0ccodecrafters\x02io\x00\x00\x01\x00\x01'
-    # print(bytes(resolve_question(w)))
+    # main()
+    packet = b'\xb0\xdd\x01\x00\x00\x02\x00\x00\x00\x00\x00\x00\x03abc\x11longassdomainname\x03com\x00\x00\x01\x00\x01\x03def\xc0\x10\x00\x01\x00\x01'
+    resolved_header, remaining = resolve_header(packet)
+    question = resolve_questions(resolved_header, remaining)
+    print("resolved header", resolved_header)
+    resp = responce(resolved_header, question)
+    print(resp)

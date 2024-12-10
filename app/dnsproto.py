@@ -211,7 +211,7 @@ class Question:
     
 @dataclass
 class DNSRequest:
-    header: DnsHeader = DnsHeader()
+    header: DnsHeader = field(default_factory=DnsHeader)
     questions: list[Question] = field(default_factory=list)
 
     def __bytes__(self):
@@ -228,7 +228,7 @@ class DNSRequest:
 
 @dataclass
 class DNSReply:
-    header: DnsHeader = DnsHeader()
+    header: DnsHeader = field(default_factory=DnsHeader)
     questions: list[Question] = field(default_factory=list)
     answers: list[DNSRR] = field(default_factory=list)
 

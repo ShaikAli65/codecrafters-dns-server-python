@@ -258,11 +258,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
     packet = b'\xb0\xdd\x01\x00\x00\x02\x00\x00\x00\x00\x00\x00\x03abc\x11longassdomainname\x03com\x00\x00\x01\x00\x01\x03def\xc0\x10\x00\x01\x00\x01'
     resolved_header, end = resolve_header(packet)
     questions, end = resolve_questions(resolved_header, packet)
     print("\n".join(map(str, questions)), end)
-    # print("resolved header", resolved_header)
-    # resp = responce(resolved_header, question)
-    # print(resp)
+    print("resolved header", resolved_header)
+    resp = responce(resolved_header, questions)
+    print(resp)

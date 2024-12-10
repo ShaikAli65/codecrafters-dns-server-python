@@ -11,6 +11,7 @@ async def main():
     loop = asyncio.get_event_loop()
     config = DNSServerConfig(("127.0.0.1", 2053))
     if len(sys.argv) > 2:
+        print(sys.argv)
         ip, port = sys.argv[1].split(":")
         config.forwarding_addr = ip, int(port)
     

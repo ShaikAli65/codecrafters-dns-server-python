@@ -9,7 +9,4 @@ class DNSServerConfig:
     server_flags:int = 0
     forwarding_addr: tuple | None = None 
     timeout:int = 5
-
-
-def get_args():
-    ...
+    

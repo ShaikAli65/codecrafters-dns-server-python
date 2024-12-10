@@ -250,10 +250,10 @@ def main():
     while True:
         packet, source = udp_socket.recvfrom(MAX_DATAGRAM_SIZE)
         print("received", packet)
-        resolved_header, remaining = resolve_header(packet)
+        resolved_header, end = resolve_header(packet)
         print("resolved header", resolved_header)
-        question = resolve_questions(resolved_header, remaining)
-        resp = responce(resolved_header, question)
+        questions, end = resolve_questions(resolved_header, packet)
+        resp = responce(resolved_header, questions)
         udp_socket.sendto(resp, source)
 
 

@@ -1,18 +1,19 @@
+import argparse
 import asyncio
 import socket
 import sys
 from app.config import DNSServerConfig
 from app.server import create_dnsserver
 
-async def main():
+async def main(args):
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
 
     loop = asyncio.get_event_loop()
     config = DNSServerConfig(("127.0.0.1", 2053))
-    if len(sys.argv) > 2:
-        print(sys.argv)
-        ip, port = sys.argv[1].split(":")
+
+    if args.resolver:
+        ip, port = args.resolver.split(":")
         config.forwarding_addr = ip, int(port)
     
     transport, proto = await loop.create_datagram_endpoint(
@@ -23,7 +24,9 @@ async def main():
     )
     
 if __name__ == "__main__":
-    asyncio.run(main())
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--resolver', type=str)
+    asyncio.run(main(parser.parse_args()))
 
     # packet = b'\xb0\xdd\x01\x00\x00\x02\x00\x00\x00\x00\x00\x00\x03abc\x11longassdomainname\x03com\x00\x00\x01\x00\x01\x03def\xc0\x10\x00\x01\x00\x01'
     # resp = process(packet)

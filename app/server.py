@@ -1,15 +1,14 @@
-import enum
 import random
-import socket
-from dataclasses import dataclass, field
-import struct
-from app.config import DNSServerConfig
-from app.dnsproto import DNSReply, DNSRequest, DnsHeader, DNSRR, Question, RCODE
-
-import extractors
 import asyncio
 from asyncio import Future
 from typing import Any
+from dataclasses import dataclass, field
+import struct
+
+from app.config import DNSServerConfig
+from app.dnsproto import DNSReply, DNSRequest, DnsHeader, DNSRR, Question, RCODE
+import app.extractors as extractors
+
 
 class DNSServer(asyncio.DatagramProtocol):
     config: DNSServerConfig

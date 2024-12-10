@@ -24,7 +24,6 @@ async def main(args):
         flags=config.server_flags,
     )
     await asyncio.Event().wait()
-
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

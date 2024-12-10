@@ -1,6 +1,6 @@
 import enum
 import socket
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import struct
 
 
@@ -86,7 +86,7 @@ class DNSRR:
     2           RDLENGTH	Length of RDATA field (specified in octets)	                                                
     RDLENGTH    RDATA   	Additional RR-specific data	Variable, as per                                                
     """
-    raw_name: bytes
+    raw_name: bytes = field(repr=False)
     NAME: list
     TYPE: int
     CLASS: int 
@@ -133,7 +133,7 @@ class CLASS(enum.IntEnum):
 
 @dataclass(slots=True)
 class Question:
-    raw_name: bytes
+    raw_name: bytes = field(repr=False)
     QNAME:list[str]
     QTYPE:int
     QCLASS:int
@@ -179,33 +179,65 @@ def resolve_header(req_data: bytes):
     ancount = unpacket_tuple[3] 
     nscount = unpacket_tuple[4]
     arcount = unpacket_tuple[5]
-    return DnsHeader(pid, qr, op_code, aa, tc, rd, ra, z, rcode, qdcount, ancount, nscount, arcount), req_data[12: ]
+    return DnsHeader(pid, qr, op_code, aa, tc, rd, ra, z, rcode, qdcount, ancount, nscount, arcount), 12
 
 def resolve_domain(packet: bytes):
-    e  = packet.find(b'\x00')
-    domain = packet[: e]
+    domain = packet
     i = 1
-    parts: list[str] = []
+    parts = []
     while True:
         l = int.from_bytes(domain[i - 1: i])
-        parts.append(str(domain[i: i + l]))
+        if l == 0:
+            break
+        parts.append(domain[i: i + l])
         i += l + 1
-        if i >= len(domain):
-            break 
-    return domain, parts, packet[e + 1: ]
+    return domain, parts
 
-def resolve_questions(header: DnsHeader, packet):
-    header.QDCOUNT
-    *parts, everthing_else = resolve_domain(packet)
-    print(*parts, everthing_else)
-    return Question(*parts, *struct.unpack('!HH',everthing_else))
+def resolve_questions(header: DnsHeader, packet: bytes):
+    questions = []
 
-def responce(header: DnsHeader, question: Question):
-    resp = DNSRR(question.raw_name, question.QNAME, question.QTYPE, question.QCLASS, 0, 0, b'')
+    def resolve_pointer(packet, _offset):
+        d = int.from_bytes(packet[_offset: _offset + 2])
+        name_pointer = d & 0x3FFF
+        names, no_need_of_this_offset = resolve_name(packet, name_pointer)
+        _offset += 2
+        return names, _offset
+        
+    def resolve_name(packet, _offset):
+        len_to_read = packet[_offset]
+
+        if len_to_read == 0:
+            return [], _offset + 1 
+        
+        if (len_to_read >> 6) & 0b11:
+            return resolve_pointer(packet, _offset)
+        
+        name = packet[_offset + 1: _offset + len_to_read + 1]
+        _offset += len_to_read + 1    
+        parts, _offset = resolve_name(packet, _offset)
+        return [name.decode()] + parts, _offset
+
+    offset = 12
+    for _ in range(header.QDCOUNT):
+        parts, ending_offset = resolve_name(packet, offset)
+        q_type_class = packet[ending_offset: ending_offset + 4]
+        print(parts)
+        q = Question(packet[offset : ending_offset], parts, *struct.unpack("!HH", q_type_class))
+        questions.append(q)
+        offset = ending_offset + 4
+
+    return questions, offset
+    
+def responce(header: DnsHeader, questions: list[Question]):
+    acount = 0
+    resp = bytearray() 
+    for question in questions:
+        ans_rr = DNSRR(question.raw_name, question.QNAME, question.QTYPE, question.QCLASS, 0, 0, b'')
+        resp.extend(bytes(ans_rr))
+        acount += 1
+        
     header.QR = True
-    header.ANCOUNT = 1
-    header.RCODE = RCODE.NOT_IMPL
-    # print(header,'\n', question,'\n', resp)
+    header.ANCOUNT = acount
     return bytes(header) + bytes(question) + bytes(resp)
 
 def main():
@@ -228,8 +260,9 @@ def main():
 if __name__ == "__main__":
     main()
     packet = b'\xb0\xdd\x01\x00\x00\x02\x00\x00\x00\x00\x00\x00\x03abc\x11longassdomainname\x03com\x00\x00\x01\x00\x01\x03def\xc0\x10\x00\x01\x00\x01'
-    resolved_header, remaining = resolve_header(packet)
-    question = resolve_questions(resolved_header, remaining)
-    print("resolved header", resolved_header)
-    resp = responce(resolved_header, question)
-    print(resp)
+    resolved_header, end = resolve_header(packet)
+    questions, end = resolve_questions(resolved_header, packet)
+    print("\n".join(map(str, questions)), end)
+    # print("resolved header", resolved_header)
+    # resp = responce(resolved_header, question)
+    # print(resp)

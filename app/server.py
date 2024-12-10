@@ -12,9 +12,9 @@ import app.extractors as extractors
 
 class DNSServer(asyncio.DatagramProtocol):
     config: DNSServerConfig
-    def __init__(self, config) -> None:
-        super().__init__()
-        self.config = config
+    def __init__(self) -> None:
+        # super().__init__()
+        # self.config = config
         self.expecting_reply_from_forwarded: dict[int, Future[tuple[DNSReply, tuple[str, int]]]] = {}
 
     def datagram_received(self, packet: bytes, addr: tuple[str | Any, int]) -> None:

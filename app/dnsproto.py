@@ -117,7 +117,7 @@ class DNSRR:
     2           RDLENGTH	Length of RDATA field (specified in octets)	                                                
     RDLENGTH    RDATA   	Additional RR-specific data	Variable, as per                                                
     """
-    NAME: list = []
+    NAME: list = field(default_factory=list)
     TYPE: int = 0
     CLASS: int  = 0
     TTL: int = 0
@@ -212,7 +212,7 @@ class Question:
 @dataclass
 class DNSRequest:
     header: DnsHeader = DnsHeader()
-    questions: list[Question] = []
+    questions: list[Question] = field(default_factory=list)
 
     def __bytes__(self):
         questions = bytearray()
@@ -229,8 +229,8 @@ class DNSRequest:
 @dataclass
 class DNSReply:
     header: DnsHeader = DnsHeader()
-    questions: list[Question] = []
-    answers: list[DNSRR] = []
+    questions: list[Question] = field(default_factory=list)
+    answers: list[DNSRR] = field(default_factory=list)
 
     def __bytes__(self):
         questions = bytearray()

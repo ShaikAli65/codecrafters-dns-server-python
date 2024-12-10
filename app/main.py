@@ -245,15 +245,19 @@ def resolve_questions(header: DnsHeader, packet: bytes):
     
 def responce(header: DnsHeader, questions: list[Question]):
     acount = 0
-    resp = bytearray() 
+    resp = bytearray()
     for question in questions:
         ans_rr = DNSRR(question.QNAME, question.QTYPE, question.QCLASS, 0, 0, b'')
         resp.extend(bytes(ans_rr))
         acount += 1
-        
+
     header.QR = True
     header.ANCOUNT = acount
-    return bytes(header) + bytes(question) + bytes(resp)
+    bheader = bytes(header)
+    bquestion = bytes(question)
+    bresp = bytes(resp)
+    print(len(bheader), len(bquestion), len(bresp))
+    return bheader + bquestion + bresp
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -269,6 +273,8 @@ def main():
         print("resolved header", resolved_header)
         questions, end = resolve_questions(resolved_header, packet)
         resp = responce(resolved_header, questions)
+
+        print(resp)
         udp_socket.sendto(resp, source)
 
 

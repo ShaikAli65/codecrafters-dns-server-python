@@ -79,6 +79,7 @@ class DNSServer(asyncio.DatagramProtocol):
             answers.extend(dns_reply.answers)
 
         dns_request.header.QR = True
+        dns_request.header.RCODE = RCODE.NOT_IMPL
         dns_request.header.ANCOUNT = len(answers)
 
         our_reply = DNSReply(dns_request.header, dns_request.questions, answers)

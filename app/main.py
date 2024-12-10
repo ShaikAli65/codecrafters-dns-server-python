@@ -86,7 +86,6 @@ class DNSRR:
     2           RDLENGTH	Length of RDATA field (specified in octets)	                                                
     RDLENGTH    RDATA   	Additional RR-specific data	Variable, as per                                                
     """
-    raw_name: bytes = field(repr=False)
     NAME: list
     TYPE: int
     CLASS: int 
@@ -99,7 +98,15 @@ class DNSRR:
         mid = struct.pack('!HHIH', self.TYPE, self.CLASS, self.TTL, self.RDLENGTH)
         end = self.RDATA
         return start + mid + end
-        
+
+    @property
+    def raw_name(self):
+        byts = bytearray()
+        for name in self.NAME:
+            bname = name.encode()
+            byts.extend(len(bname).to_bytes() + bname)
+        return bytes(byts)
+
 
 class TYPE(enum.Enum):
     A     = 1   # a host address
@@ -133,14 +140,22 @@ class CLASS(enum.IntEnum):
 
 @dataclass(slots=True)
 class Question:
-    raw_name: bytes = field(repr=False)
+    # raw_name: bytes = field(repr=False)
     QNAME:list[str]
     QTYPE:int
     QCLASS:int
 
     def __bytes__(self):
         return self.raw_name + b'\x00' + self.QTYPE.to_bytes(2, 'big') + self.QCLASS.to_bytes(2, 'big')
-            
+
+    @property
+    def raw_name(self):
+        byts = bytearray()
+        for name in self.QNAME:
+            bname = name.encode()
+            byts.extend(len(bname).to_bytes() + bname)
+        return bytes(byts)
+    
 def resolve_header(req_data: bytes):
     """
 
@@ -222,7 +237,7 @@ def resolve_questions(header: DnsHeader, packet: bytes):
         parts, ending_offset = resolve_name(packet, offset)
         q_type_class = packet[ending_offset: ending_offset + 4]
         print(parts)
-        q = Question(packet[offset : ending_offset], parts, *struct.unpack("!HH", q_type_class))
+        q = Question(parts, *struct.unpack("!HH", q_type_class))
         questions.append(q)
         offset = ending_offset + 4
 
@@ -232,7 +247,7 @@ def responce(header: DnsHeader, questions: list[Question]):
     acount = 0
     resp = bytearray() 
     for question in questions:
-        ans_rr = DNSRR(question.raw_name, question.QNAME, question.QTYPE, question.QCLASS, 0, 0, b'')
+        ans_rr = DNSRR(question.QNAME, question.QTYPE, question.QCLASS, 0, 0, b'')
         resp.extend(bytes(ans_rr))
         acount += 1
         
@@ -258,7 +273,7 @@ def main():
 
 
 if __name__ == "__main__":
-    # main()
+    main()
     packet = b'\xb0\xdd\x01\x00\x00\x02\x00\x00\x00\x00\x00\x00\x03abc\x11longassdomainname\x03com\x00\x00\x01\x00\x01\x03def\xc0\x10\x00\x01\x00\x01'
     resolved_header, end = resolve_header(packet)
     questions, end = resolve_questions(resolved_header, packet)

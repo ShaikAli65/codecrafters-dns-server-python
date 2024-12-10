@@ -1,8 +1,6 @@
-from functools import cached_property
 import struct
 import enum
 from dataclasses import dataclass, field
-from typing import Optional
 
 ENCODING = 'utf-8'
 
@@ -190,7 +188,6 @@ class Question:
     def __bytes__(self):
         return self.raw_name + b'\x00' + self.QTYPE.to_bytes(2, 'big') + self.QCLASS.to_bytes(2, 'big')
 
-    # @cached_property
     @property
     def raw_name(self):
         byts = bytearray()

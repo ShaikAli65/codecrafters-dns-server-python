@@ -74,7 +74,6 @@ def questions(packet: bytes, header: DnsHeader):
     for _ in range(header.QDCOUNT):
         parts, ending_offset = _resolve_name(packet, offset)
         q_type_class = packet[ending_offset: ending_offset + 4]
-        print(parts)
         q = Question(parts, *struct.unpack("!HH", q_type_class))
         questions.insert(0, q)
         offset = ending_offset + 4

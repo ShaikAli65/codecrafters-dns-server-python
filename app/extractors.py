@@ -85,13 +85,13 @@ def answers(packet: bytes, header: DnsHeader, offset):
     answers = []
 
     for _ in range(header.ANCOUNT):
-        parts, ending_offset = _resolve_name(packet, offset) 
-        mid = struct.unpack('!HHIH',packet[ending_offset: ending_offset + 10])
-        ending_offset += 10
+        parts, offset = _resolve_name(packet, offset) 
+        mid = struct.unpack('!HHIH',packet[offset: offset + 10])
+        offset += 10
         ans = DNSRR(parts, *mid)
-        ans.RDATA = packet[ending_offset: ending_offset + ans.RDLENGTH]
+        ans.RDATA = packet[offset: offset + ans.RDLENGTH]
         answers.append(ans)
         
-    return answers, ending_offset
+    return answers, offset
 
 __all__ = 'header', 'questions', 'answers'

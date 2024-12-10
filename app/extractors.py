@@ -1,5 +1,5 @@
 import struct
-from dnsproto import DNSRR, DnsHeader, Question, HEADER_LEN
+from app.dnsproto import DNSRR, DnsHeader, Question, HEADER_LEN
 
 
 def header(req_data: bytes):

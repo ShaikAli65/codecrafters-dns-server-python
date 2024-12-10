@@ -1,8 +1,8 @@
 import asyncio
 import socket
 import sys
-from config import DNSServerConfig
-from server import create_dnsserver
+from app.config import DNSServerConfig
+from app.server import create_dnsserver
 
 async def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -10,7 +10,7 @@ async def main():
 
     loop = asyncio.get_event_loop()
     config = DNSServerConfig(("127.0.0.1", 2053))
-    
+
     ip, port = sys.argv[1].split(":")
     config.forwarding_addr = ip, int(port)
     

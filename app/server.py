@@ -4,7 +4,7 @@ import socket
 from dataclasses import dataclass, field
 import struct
 from app.config import DNSServerConfig
-from dnsproto import DNSReply, DNSRequest, DnsHeader, DNSRR, Question, RCODE
+from app.dnsproto import DNSReply, DNSRequest, DnsHeader, DNSRR, Question, RCODE
 
 import extractors
 import asyncio

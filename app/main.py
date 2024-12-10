@@ -10,9 +10,9 @@ async def main():
 
     loop = asyncio.get_event_loop()
     config = DNSServerConfig(("127.0.0.1", 2053))
-
-    ip, port = sys.argv[1].split(":")
-    config.forwarding_addr = ip, int(port)
+    if len(sys.argv) > 2:
+        ip, port = sys.argv[1].split(":")
+        config.forwarding_addr = ip, int(port)
     
     transport, proto = await loop.create_datagram_endpoint(
         create_dnsserver(config),

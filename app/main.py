@@ -242,7 +242,7 @@ def resolve_questions(header: DnsHeader, packet: bytes):
         offset = ending_offset + 4
 
     return questions, offset
-    
+
 def responce(header: DnsHeader, questions: list[Question]):
     acount = 0
     resp = bytearray()
@@ -257,9 +257,15 @@ def responce(header: DnsHeader, questions: list[Question]):
     bheader = bytes(header)
     bquestion = bytes(question)
     bresp = bytes(resp)
+    return bheader, bresp
 
-    print(len(bheader), len(bquestion), len(bresp))
-    return bheader + bquestion + bresp
+def process(packet):
+    resolved_header, h_end = resolve_header(packet)
+    print("resolved header", resolved_header)
+    questions, q_end = resolve_questions(resolved_header, packet)
+    print("resolved questions:", "\n".join(str(x) for x in questions), "\n")
+    header, answers = responce(resolved_header, questions)
+    return header + packet[h_end: q_end] + answers
 
 
 def main():
@@ -272,11 +278,7 @@ def main():
     while True:
         packet, source = udp_socket.recvfrom(MAX_DATAGRAM_SIZE)
         print("received", packet)
-        resolved_header, end = resolve_header(packet)
-        print("resolved header", resolved_header)
-        questions, end = resolve_questions(resolved_header, packet)
-        resp = responce(resolved_header, questions)
-
+        resp = process(packet)
         print(resp)
         udp_socket.sendto(resp, source)
 
@@ -284,9 +286,5 @@ def main():
 if __name__ == "__main__":
     main()
     packet = b'\xb0\xdd\x01\x00\x00\x02\x00\x00\x00\x00\x00\x00\x03abc\x11longassdomainname\x03com\x00\x00\x01\x00\x01\x03def\xc0\x10\x00\x01\x00\x01'
-    resolved_header, end = resolve_header(packet)
-    questions, end = resolve_questions(resolved_header, packet)
-    print("\n".join(map(str, questions)), end)
-    print("resolved header", resolved_header)
-    resp = responce(resolved_header, questions)
+    resp = process(packet)
     print(resp)

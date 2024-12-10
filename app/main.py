@@ -253,7 +253,7 @@ def responce(header: DnsHeader, questions: list[Question]):
 
     header.QR = True
     header.ANCOUNT = acount
-
+    header.RCODE = RCODE.NOT_IMPL
     bheader = bytes(header)
     bquestion = bytes(question)
     bresp = bytes(resp)

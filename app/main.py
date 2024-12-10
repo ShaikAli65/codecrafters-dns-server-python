@@ -238,7 +238,7 @@ def resolve_questions(header: DnsHeader, packet: bytes):
         q_type_class = packet[ending_offset: ending_offset + 4]
         print(parts)
         q = Question(parts, *struct.unpack("!HH", q_type_class))
-        questions.append(q)
+        questions.insert(0, q)
         offset = ending_offset + 4
 
     return questions, offset
@@ -253,11 +253,14 @@ def responce(header: DnsHeader, questions: list[Question]):
 
     header.QR = True
     header.ANCOUNT = acount
+
     bheader = bytes(header)
     bquestion = bytes(question)
     bresp = bytes(resp)
+
     print(len(bheader), len(bquestion), len(bresp))
     return bheader + bquestion + bresp
+
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.

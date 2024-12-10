@@ -11,8 +11,6 @@ import app.extractors as extractors
 class DNSServer(asyncio.DatagramProtocol):
     config: DNSServerConfig
     def __init__(self) -> None:
-        # super().__init__()
-        # self.config = config
         self.expecting_reply_from_forwarded: dict[int, Future[tuple[DNSReply, tuple[str, int]]]] = {}
 
     def datagram_received(self, packet: bytes, addr: tuple[str | Any, int]) -> None:
@@ -25,11 +23,7 @@ class DNSServer(asyncio.DatagramProtocol):
         questions, q_end = extractors.questions(packet, resolved_header)
         dns_req = DNSRequest(resolved_header, questions)
 
-        # print("resolved questions:", "\n".join(str(x) for x in questions), "\n")
-
         if self.config.forwarding_addr is None:
-            # header, answers = responce(resolved_header, questions)
-            # resp = header + packet[h_end: q_end] + answers
             resp = self.arrange_response(dns_req)
             print("replying :", resp)
             self.transport.sendto(bytes(resp), addr)

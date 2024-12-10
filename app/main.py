@@ -1,7 +1,8 @@
+import sys
+sys.path.append("C:\\Users\\7862s\\Desktop\\codecrafters\\codecrafters-dns-server-python")
+
 import argparse
 import asyncio
-import socket
-import sys
 from app.config import DNSServerConfig
 from app.server import create_dnsserver
 
@@ -22,6 +23,8 @@ async def main(args):
         family=config.ip_family,
         flags=config.server_flags,
     )
+    await asyncio.Event().wait()
+
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
